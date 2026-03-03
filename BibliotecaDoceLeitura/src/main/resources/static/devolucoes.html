@@ -1,0 +1,20 @@
+<!DOCTYPE html>
+<html lang="pt-br"><head>
+<meta charset="UTF-8"><title>Devoluções</title>
+<link rel="stylesheet" href="assets/css/style.css"></head>
+<body>
+  <header><h2>Devoluções</h2></header>
+  <main>
+    <form id="formDevolucao">
+      <label>ID Empréstimo <input required pattern="\d+" id="idEmprestimo"></label>
+      <label>Data (YYYY-MM-DD) <input required pattern="\d{4}-\d{2}-\d{2}" id="data"></label>
+      <button type="submit">Registrar</button>
+    </form>
+    <section>
+      <h3>Histórico</h3>
+      <ul id="listaDevolucoes"></ul>
+    </section>
+  </main>
+  <script src="assets/js/app.js"></script>
+</body>
+</html>
