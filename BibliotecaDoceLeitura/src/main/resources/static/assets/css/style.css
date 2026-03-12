@@ -1,50 +1,222 @@
-:root{font-family:system-ui,Arial,Helvetica,sans-serif;}
+:root{
+    font-family: system-ui, Arial, Helvetica, sans-serif;
+    --marrom:#5f5026;
+    --marrom-escuro:#4a3e1d;
+    --bege:#f6f2e8;
+    --borda:#d8d1bf;
+    --texto:#222;
+}
+
+*{ box-sizing:border-box; }
 
 body{
     margin:0;
     background:#fafafa;
-    color:#222
+    color:var(--texto);
 }
+
 header{
-    display: flex;
-    align-items:center;
-    justify-content:center; 
-    background:#5f5026;
+    background:var(--marrom);
     color:#fff;
-    padding:12px
+    padding:20px 16px;
+    text-align:center;
 }
+
+header h1, header h2, header p{
+    margin:0;
+}
+
+header p{
+    margin-top:8px;
+    opacity:.92;
+}
+
 main{
-    display: flex;
-    flex-direction: column;
-    align-items: center;;
-    padding:2rem
+    max-width:1100px;
+    margin:0 auto;
+    padding:24px 16px 40px;
 }
+
+.nav-links{
+    display:flex;
+    flex-wrap:wrap;
+    gap:12px;
+    justify-content:center;
+    margin:0 0 24px;
+}
+
+.nav-links a{
+    text-decoration:none;
+    color:var(--marrom);
+    border:1px solid var(--borda);
+    background:#fff;
+    padding:10px 14px;
+    border-radius:8px;
+    font-weight:600;
+}
+
+.nav-links a:hover{
+    background:var(--bege);
+}
+
+.card{
+    background:#fff;
+    border:1px solid #ece7da;
+    border-radius:14px;
+    padding:20px;
+    box-shadow:0 10px 24px rgba(0,0,0,.04);
+}
+
+.form-card{ max-width:760px; margin:0 auto; }
+.table-card{ margin-top:24px; }
+
 form{
     display:grid;
-    gap:8px;
-    width: 40rem;
+    gap:14px;
 }
+
+.form-grid{
+    display:grid;
+    grid-template-columns:repeat(auto-fit, minmax(240px, 1fr));
+    gap:14px;
+}
+
 label{
     display:grid;
-    gap:4px
+    gap:6px;
+    font-weight:600;
 }
-input,textarea{
-    padding:8px;
+
+input, textarea{
+    width:100%;
+    padding:10px 12px;
     border:1px solid #bbb;
-    border-radius:6px
+    border-radius:8px;
+    font:inherit;
+    background:#fff;
 }
+
+textarea{
+    min-height:120px;
+    resize:vertical;
+}
+
 button{
-    padding:10px 14px;
-    background:#5f5026;
+    padding:12px 16px;
+    background:var(--marrom);
     color:#fff;
     border:0;
-    border-radius:6px;
-    cursor:pointer
+    border-radius:8px;
+    cursor:pointer;
+    font-weight:700;
 }
-section{
-    margin-top:2em;
-    width: 50rem;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
+
+button:hover{
+    background:var(--marrom-escuro);
+}
+
+.table-wrapper{
+    overflow-x:auto;
+}
+
+table{
+    width:100%;
+    border-collapse:collapse;
+    background:#fff;
+}
+
+thead{
+    background:var(--bege);
+}
+
+th, td{
+    border:1px solid #e7dfcf;
+    padding:12px;
+    text-align:left;
+    vertical-align:top;
+}
+
+tbody tr:nth-child(even){
+    background:#fcfbf8;
+}
+
+.empty-state{
+    text-align:center;
+    padding:18px;
+    color:#666;
+}
+
+.page-actions{
+    margin-top:16px;
+    text-align:center;
+}
+
+.page-actions a{
+    color:var(--marrom);
+    font-weight:700;
+    text-decoration:none;
+}
+
+.hero-nav{
+    max-width:700px;
+    margin:28px auto 0;
+    display:grid;
+    grid-template-columns:repeat(auto-fit, minmax(220px, 1fr));
+    gap:14px;
+}
+
+.hero-nav a{
+    display:block;
+    text-decoration:none;
+    background:rgba(255,255,255,.92);
+    color:var(--marrom);
+    padding:16px;
+    border-radius:12px;
+    text-align:center;
+    font-weight:700;
+    border:1px solid #e5dcc7;
+}
+
+.hero-nav a:hover{ background:#fff8ea; }
+
+
+@media (max-width: 640px){
+    main{ padding:18px 12px 32px; }
+    .card{ padding:16px; }
+}
+
+
+.search-bar{
+    margin-bottom:18px;
+}
+
+.helper-text{
+    margin:0 0 14px;
+    color:#5e5a50;
+}
+
+.readonly-field{
+    background:#f2efe7;
+    color:#5b5650;
+}
+
+.clickable-row{
+    cursor:pointer;
+}
+
+.clickable-row:hover{
+    background:#f8f1df;
+}
+
+.selected-row{
+    background:#efe1b7 !important;
+}
+
+.status-select{
+    width:100%;
+    padding:10px 12px;
+    border:1px solid #bbb;
+    border-radius:8px;
+    font:inherit;
+    background:#fff;
 }

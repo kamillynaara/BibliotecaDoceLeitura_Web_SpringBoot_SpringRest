@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Editar Clientes</title>
+<link rel="stylesheet" href="assets/css/style.css">
+</head>
+<body>
+  <header>
+    <h2>Editar Clientes</h2>
+    <p>Pesquise e selecione um cliente na tabela para editar seus dados.</p>
+  </header>
+  <main>
+    <nav class="nav-links">
+      <a href="index.html">Início</a>
+    </nav>
+
+    <section class="card table-card">
+      <label class="search-bar">Pesquisar por ID ou nome
+        <input id="buscaCliente" placeholder="Digite o ID ou o nome do cliente">
+      </label>
+      <div class="table-wrapper">
+        <table>
+          <thead>
+            <tr>
+              <th>ID</th>
+              <th>Nome</th>
+              <th>Email</th>
+              <th>Telefone</th>
+              <th>Status de Acesso</th>
+            </tr>
+          </thead>
+          <tbody id="tbodyEditarClientes" data-columns="5"></tbody>
+        </table>
+      </div>
+    </section>
+
+    <section class="card form-card table-card">
+      <p class="helper-text">Clique em uma linha da tabela para preencher o formulário abaixo.</p>
+      <form id="formEditarCliente">
+        <div class="form-grid">
+          <label>ID
+            <input id="editClienteId" class="readonly-field" readonly>
+          </label>
+          <label>Nome
+            <input required id="editNome">
+          </label>
+          <label>Email
+            <input required type="email" id="editEmail">
+          </label>
+          <label>Telefone
+            <input required id="editTelefone" maxlength="13">
+          </label>
+          <label>Status de Acesso
+            <select id="editStatusCliente" class="status-select">
+              <option value="Habilitado">Habilitado</option>
+              <option value="Desabilitado">Desabilitado</option>
+            </select>
+          </label>
+        </div>
+        <button type="submit">Salvar Alterações</button>
+      </form>
+    </section>
+  <script src="assets/js/app.js"></script>
+  </main>
+</body>
+</html>

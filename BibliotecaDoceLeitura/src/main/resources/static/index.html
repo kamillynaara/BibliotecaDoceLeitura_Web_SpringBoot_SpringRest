@@ -4,51 +4,56 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Biblioteca Doce Leitura</title>
+  <link rel="stylesheet" href="assets/css/style.css">
+  
   <style>
     body{
-      background-repeat: no-repeat;
-      background-size: cover;
-      background-image: url(img/background.jpg);
-      display: flex;
-      flex-direction: column;
-      align-items: center;
+      min-height:100vh;
+      background-image:linear-gradient(rgba(0,0,0,.28), rgba(0,0,0,.28)), url('../img/background.jpg');
+      background-repeat:no-repeat;
+      background-size:cover;
+      background-position:center;
     }
 
-    header{
-      margin-top: 5rem;
+    body header{
+        background:transparent;
+        padding-top:72px;
     }
-    header,nav{
-      background:#8a631e;
-      width: 50rem;
-      display: flex;
-      justify-content: center;
-      color:#fff;
-      padding: 1rem
-    }
-    nav{
-      display:flex;
-      flex-direction: column;
-      align-items:center
-    }
-    nav a{
-      color:#fff;
-      text-decoration: none;
-      margin-top: 2em
-    }
-    nav a:hover{
-      color: #877a59;
-      transition: color 0.3s ease;
+
+    body .intro{
+        max-width:780px;
+        margin:0 auto;
+        background:rgba(95,80,38,.84);
+        color:#fff;
+        padding:28px;
+        border-radius:16px;
+        text-align:center;
     }
   </style>
+  
 </head>
 <body>
-  <header><h1>Bem-vindo à Biblioteca Doce Leitura</h1></header>
-  <nav>
-    <a href="livros.html">Livros</a>
-    <a href="clientes.html">Clientes</a>
-    <a href="emprestimos.html">Empréstimos</a>
-    <a href="devolucoes.html">Devoluções</a>
-  </nav>
+  <header>
+    <div class="intro">
+      <h1>Bem-vindo à Biblioteca Doce Leitura</h1>
+      <p>Escolha uma das opções abaixo para cadastrar, editar ou consultar os dados do sistema.</p>
+    </div>
+  </header>
+
+  <main>
+    <section class="hero-nav">
+      <a href="cadastroLivros.html">Cadastrar Livros</a>
+      <a href="consultaLivros.html">Consulta de Livros</a>
+      <a href="edicaoLivro.html">Editar Livro</a>
+      <a href="cadastroClientes.html">Cadastrar Clientes</a>
+      <a href="consultaClientes.html">Consulta de Clientes</a>
+      <a href="edicaoCliente.html">Editar Cliente</a>
+      <a href="registroEmprestimos.html">Registrar Empréstimos</a>
+      <a href="consultaEmprestimos.html">Consulta de Empréstimos</a>
+      <a href="registroDevolucoes.html">Registrar Devoluções</a>
+      <a href="consultaDevolucoes.html">Consulta de Devoluções</a>
+    </section>
+  </main>
 
   <script src="assets/js/app.js"></script>
 </body>

@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Editar Livros</title>
+<link rel="stylesheet" href="assets/css/style.css">
+</head>
+<body>
+  <header>
+    <h2>Editar Livros</h2>
+    <p>Pesquise e selecione um livro na tabela para editar seus dados.</p>
+  </header>
+  <main>
+    <nav class="nav-links">
+      <a href="index.html">Início</a>
+    </nav>
+
+    <section class="card table-card">
+      <label class="search-bar">Pesquisar por ID ou título
+        <input id="buscaLivro" placeholder="Digite o ID ou o título do livro">
+      </label>
+      <div class="table-wrapper">
+        <table>
+          <thead>
+            <tr>
+              <th>ID</th>
+              <th>Título</th>
+              <th>Autor</th>
+              <th>Gênero</th>
+              <th>Ano</th>
+              <th>Status</th>
+            </tr>
+          </thead>
+          <tbody id="tbodyEditarLivros" data-columns="6"></tbody>
+        </table>
+      </div>
+    </section>
+
+    <section class="card form-card table-card">
+      <p class="helper-text">Clique em uma linha da tabela para preencher o formulário abaixo.</p>
+      <form id="formEditarLivro">
+        <div class="form-grid">
+          <label>ID
+            <input id="editLivroId" class="readonly-field" readonly>
+          </label>
+          <label>Título
+            <input required id="editTitulo">
+          </label>
+          <label>Autor
+            <input required id="editAutor">
+          </label>
+          <label>Gênero
+            <input required id="editGenero">
+          </label>
+          <label>Ano de publicação
+            <input required pattern="\d{4}" maxlength="4" id="editAno">
+          </label>
+          <label>Status
+            <select id="editStatusLivro" class="status-select">
+              <option value="Disponível">Disponível</option>
+              <option value="Emprestado">Emprestado</option>
+            </select>
+          </label>
+        </div>
+        <label>Descrição
+          <textarea id="editDescricao"></textarea>
+        </label>
+        <button type="submit">Salvar Alterações</button>
+      </form>
+    </section>
+  <script src="assets/js/app.js"></script>
+  </main>
+</body>
+</html>

@@ -1,0 +1,32 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Registro de Devoluções</title>
+<link rel="stylesheet" href="assets/css/style.css">
+</head>
+<body>
+  <header>
+    <h2>Registro de Devoluções</h2>
+  </header>
+  <main>
+  <nav class="nav-links">
+    <a href="index.html">Início</a>
+  </nav>
+    <section class="card form-card">
+      <form id="formDevolucao">
+        <div class="form-grid">
+          <label>ID do Empréstimo <input required pattern="\d+" id="idEmprestimo"></label>
+          <label>Data da devolução <input required type="date" id="data"></label>
+        </div>
+        <button type="submit">Registrar</button>
+      </form>
+      <div class="page-actions">
+        <a href="consultaDevolucoes.html">Ir para consulta de devoluções</a>
+      </div>
+    </section>
+  </main>
+  <script src="assets/js/app.js"></script>
+</body>
+</html>

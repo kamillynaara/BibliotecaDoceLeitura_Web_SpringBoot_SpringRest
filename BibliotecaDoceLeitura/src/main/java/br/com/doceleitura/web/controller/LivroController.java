@@ -12,4 +12,17 @@ public class LivroController {
     public LivroController(LivroRepository repo){ this.repo = repo; }
     @GetMapping public List<Livro> all(){ return repo.findAll(); }
     @PostMapping public Livro create(@RequestBody Livro l){ return repo.save(l); }
+
+    @PutMapping("/{id}")
+    public Livro update(@PathVariable Integer id, @RequestBody Livro dados){
+        return repo.findById(id).map(existente -> {
+            existente.setTitulo(dados.getTitulo());
+            existente.setAutor(dados.getAutor());
+            existente.setGenero(dados.getGenero());
+            existente.setAnoPublicacao(dados.getAnoPublicacao());
+            existente.setDescricao(dados.getDescricao());
+            existente.setStatusDisponibilidade(dados.getStatusDisponibilidade());
+            return repo.save(existente);
+        }).orElseThrow(() -> new RuntimeException("Registro não encontrado: " + id));
+    }
 }

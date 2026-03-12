@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Cadastro de Livros</title>
+<link rel="stylesheet" href="assets/css/style.css">
+</head>
+<body>
+  <header>
+    <h2>Cadastro de Livros</h2>
+  </header>
+  <main>
+  <nav class="nav-links">
+    <a href="index.html">Início</a>
+  </nav>
+    <section class="card form-card">
+      <form id="formLivro">
+        <div class="form-grid">
+          <label>Título <input required id="titulo"></label>
+          <label>Autor <input required id="autor"></label>
+          <label>Gênero <input required id="genero"></label>
+          <label>Ano de publicação <input required pattern="\d{4}" maxlength="4" id="ano"></label>
+        </div>
+        <label>Descrição <textarea id="descricao"></textarea></label>
+        <button type="submit">Cadastrar</button>
+      </form>
+      <div class="page-actions">
+        <a href="consultaLivros.html">Ir para consulta de livros</a>
+      </div>
+    </section>
+  </main>
+  <script src="assets/js/app.js"></script>
+</body>
+</html>

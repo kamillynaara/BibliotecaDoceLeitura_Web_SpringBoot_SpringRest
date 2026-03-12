@@ -1,15 +1,10 @@
-/**
- * Front-end simples (HTML + JS) integrado ao backend Spring Boot (REST API).
- * Endpoints:
- *  - /api/livros
- *  - /api/clientes
- *  - /api/emprestimos   (usa clienteId, livroId, dataPrevistaDevolucao)
- *  - /api/devolucoes    (usa emprestimoId, dataDevolucao)
- */
-
 const API_BASE = "";
 
-// Helpers
+let livrosCache = [];
+let clientesCache = [];
+let livroSelecionadoId = null;
+let clienteSelecionadoId = null;
+
 function byId(id){ return document.getElementById(id); }
 
 async function getJSON(path){
@@ -17,9 +12,10 @@ async function getJSON(path){
   if(!res.ok) throw new Error(await res.text());
   return await res.json();
 }
-async function postJSON(path, body){
+
+async function sendJSON(path, method, body){
   const res = await fetch(API_BASE + path, {
-    method: "POST",
+    method,
     headers: { "Content-Type":"application/json", "Accept":"application/json" },
     body: JSON.stringify(body)
   });
@@ -27,33 +23,230 @@ async function postJSON(path, body){
   return await res.json();
 }
 
+async function postJSON(path, body){
+  return sendJSON(path, "POST", body);
+}
+
+async function putJSON(path, body){
+  return sendJSON(path, "PUT", body);
+}
+
 function fmtDate(d){
-  if(!d) return "";
-  // backend manda YYYY-MM-DD
-  return String(d);
+  return d ? String(d) : "";
 }
+
 function fmtMoney(v){
-  if(v === null || v === undefined) return "";
-  return Number(v).toFixed(2);
+  if(v === null || v === undefined || v === "") return "R$ 0,00";
+  return `R$ ${Number(v).toFixed(2).replace(".", ",")}`;
 }
 
-// ===== LIVROS =====
-async function initLivros(){
-  const form = byId("formLivro");
-  const lista = byId("listaLivros");
-  if(!form || !lista) return;
+function setError(message, fallback){
+  alert(`${fallback}: ${message}`);
+}
 
-  async function render(){
-    const livros = await getJSON("/api/livros");
-    lista.innerHTML = "";
-    livros.forEach(l=>{
-      const li = document.createElement("li");
-      li.textContent = `#${l.id} — ${l.titulo} (${l.autor}) | ${l.genero} | ${l.anoPublicacao} | ${l.statusDisponibilidade}`;
-      lista.appendChild(li);
-    });
+function setSuccess(message){
+  alert(message);
+}
+
+function renderTableBody(tbody, rows, emptyMessage){
+  if(!tbody) return;
+  tbody.innerHTML = "";
+
+  if(!rows.length){
+    const tr = document.createElement("tr");
+    const td = document.createElement("td");
+    td.colSpan = tbody.dataset.columns || 1;
+    td.className = "empty-state";
+    td.textContent = emptyMessage;
+    tr.appendChild(td);
+    tbody.appendChild(tr);
+    return;
   }
 
-  form.addEventListener("submit", async (e)=>{
+  rows.forEach(cells => {
+    const tr = document.createElement("tr");
+    cells.forEach(cell => {
+      const td = document.createElement("td");
+      td.textContent = cell ?? "";
+      tr.appendChild(td);
+    });
+    tbody.appendChild(tr);
+  });
+}
+
+function normalizeText(value){
+  return String(value ?? "").toLowerCase().normalize("NFD").replace(/[̀-ͯ]/g, "").trim();
+}
+
+function matchesFilter(itemText, filterText){
+  return normalizeText(itemText).includes(normalizeText(filterText));
+}
+
+async function loadLivrosTable(){
+  const tbody = byId("tbodyLivros");
+  if(!tbody) return;
+
+  const livros = await getJSON("/api/livros");
+  livrosCache = livros;
+  renderTableBody(
+    tbody,
+    livros.map(l => [l.id, l.titulo, l.autor, l.genero, l.anoPublicacao, l.statusDisponibilidade, l.descricao]),
+    "Nenhum livro cadastrado."
+  );
+}
+
+async function loadClientesTable(){
+  const tbody = byId("tbodyClientes");
+  if(!tbody) return;
+
+  const clientes = await getJSON("/api/clientes");
+  clientesCache = clientes;
+  renderTableBody(
+    tbody,
+    clientes.map(c => [c.id, c.nome, c.email, c.telefone, c.statusAcesso]),
+    "Nenhum cliente cadastrado."
+  );
+}
+
+async function loadEmprestimosTable(){
+  const tbody = byId("tbodyEmprestimos");
+  if(!tbody) return;
+
+  const emprestimos = await getJSON("/api/emprestimos");
+  renderTableBody(
+    tbody,
+    emprestimos.map(e => [
+      e.id,
+      e.cliente ? e.cliente.nome : "—",
+      e.livro ? e.livro.titulo : "—",
+      fmtDate(e.dataEmprestimo),
+      fmtDate(e.dataPrevistaDevolucao),
+      e.statusVigor
+    ]),
+    "Nenhum empréstimo registrado."
+  );
+}
+
+async function loadDevolucoesTable(){
+  const tbody = byId("tbodyDevolucoes");
+  if(!tbody) return;
+
+  const devolucoes = await getJSON("/api/devolucoes");
+  renderTableBody(
+    tbody,
+    devolucoes.map(d => [
+      d.id,
+      d.emprestimo ? d.emprestimo.id : "—",
+      d.emprestimo && d.emprestimo.cliente ? d.emprestimo.cliente.nome : "—",
+      d.emprestimo && d.emprestimo.livro ? d.emprestimo.livro.titulo : "—",
+      fmtDate(d.dataDevolucao),
+      d.qtdeDiasAtraso ?? 0,
+      fmtMoney(d.valorMulta)
+    ]),
+    "Nenhuma devolução registrada."
+  );
+}
+
+function renderEditableLivrosTable(livros){
+  const tbody = byId("tbodyEditarLivros");
+  if(!tbody) return;
+  tbody.innerHTML = "";
+
+  if(!livros.length){
+    renderTableBody(tbody, [], "Nenhum livro encontrado.");
+    return;
+  }
+
+  livros.forEach(livro => {
+    const tr = document.createElement("tr");
+    tr.className = "clickable-row";
+    if(String(livro.id) === String(livroSelecionadoId)) tr.classList.add("selected-row");
+    tr.innerHTML = `
+      <td>${livro.id ?? ""}</td>
+      <td>${livro.titulo ?? ""}</td>
+      <td>${livro.autor ?? ""}</td>
+      <td>${livro.genero ?? ""}</td>
+      <td>${livro.anoPublicacao ?? ""}</td>
+      <td>${livro.statusDisponibilidade ?? ""}</td>
+    `;
+    tr.addEventListener("click", () => selecionarLivro(livro.id));
+    tbody.appendChild(tr);
+  });
+}
+
+function renderEditableClientesTable(clientes){
+  const tbody = byId("tbodyEditarClientes");
+  if(!tbody) return;
+  tbody.innerHTML = "";
+
+  if(!clientes.length){
+    renderTableBody(tbody, [], "Nenhum cliente encontrado.");
+    return;
+  }
+
+  clientes.forEach(cliente => {
+    const tr = document.createElement("tr");
+    tr.className = "clickable-row";
+    if(String(cliente.id) === String(clienteSelecionadoId)) tr.classList.add("selected-row");
+    tr.innerHTML = `
+      <td>${cliente.id ?? ""}</td>
+      <td>${cliente.nome ?? ""}</td>
+      <td>${cliente.email ?? ""}</td>
+      <td>${cliente.telefone ?? ""}</td>
+      <td>${cliente.statusAcesso ?? ""}</td>
+    `;
+    tr.addEventListener("click", () => selecionarCliente(cliente.id));
+    tbody.appendChild(tr);
+  });
+}
+
+function filtrarLivrosEdicao(){
+  const busca = byId("buscaLivro");
+  if(!busca) return;
+  const termo = busca.value;
+  const filtrados = livrosCache.filter(l => matchesFilter(l.id, termo) || matchesFilter(l.titulo, termo));
+  renderEditableLivrosTable(filtrados);
+}
+
+function filtrarClientesEdicao(){
+  const busca = byId("buscaCliente");
+  if(!busca) return;
+  const termo = busca.value;
+  const filtrados = clientesCache.filter(c => matchesFilter(c.id, termo) || matchesFilter(c.nome, termo));
+  renderEditableClientesTable(filtrados);
+}
+
+function selecionarLivro(id){
+  const livro = livrosCache.find(l => String(l.id) === String(id));
+  if(!livro) return;
+  livroSelecionadoId = livro.id;
+  byId("editLivroId").value = livro.id ?? "";
+  byId("editTitulo").value = livro.titulo ?? "";
+  byId("editAutor").value = livro.autor ?? "";
+  byId("editGenero").value = livro.genero ?? "";
+  byId("editAno").value = livro.anoPublicacao ?? "";
+  byId("editStatusLivro").value = livro.statusDisponibilidade ?? "";
+  byId("editDescricao").value = livro.descricao ?? "";
+  filtrarLivrosEdicao();
+}
+
+function selecionarCliente(id){
+  const cliente = clientesCache.find(c => String(c.id) === String(id));
+  if(!cliente) return;
+  clienteSelecionadoId = cliente.id;
+  byId("editClienteId").value = cliente.id ?? "";
+  byId("editNome").value = cliente.nome ?? "";
+  byId("editEmail").value = cliente.email ?? "";
+  byId("editTelefone").value = cliente.telefone ?? "";
+  byId("editStatusCliente").value = cliente.statusAcesso ?? "";
+  filtrarClientesEdicao();
+}
+
+async function initLivros(){
+  const form = byId("formLivro");
+  if(!form) return;
+
+  form.addEventListener("submit", async (e) => {
     e.preventDefault();
     const payload = {
       titulo: byId("titulo").value,
@@ -62,129 +255,183 @@ async function initLivros(){
       anoPublicacao: byId("ano").value,
       descricao: byId("descricao").value
     };
+
     try{
       await postJSON("/api/livros", payload);
       form.reset();
-      await render();
+      setSuccess("Livro cadastrado com sucesso.");
+      await loadLivrosTable();
     }catch(err){
-      alert("Erro ao cadastrar livro: " + err.message);
+      setError(err.message, "Erro ao cadastrar livro");
     }
   });
-
-  try{ await render(); }catch(err){ console.error(err); }
 }
 
-// ===== CLIENTES =====
 async function initClientes(){
   const form = byId("formCliente");
-  const lista = byId("listaClientes");
-  if(!form || !lista) return;
+  if(!form) return;
 
-  async function render(){
-    const clientes = await getJSON("/api/clientes");
-    lista.innerHTML = "";
-    clientes.forEach(c=>{
-      const li = document.createElement("li");
-      li.textContent = `#${c.id} — ${c.nome} | ${c.email} | ${c.telefone} | ${c.statusAcesso}`;
-      lista.appendChild(li);
-    });
-  }
-
-  form.addEventListener("submit", async (e)=>{
+  form.addEventListener("submit", async (e) => {
     e.preventDefault();
     const payload = {
       nome: byId("nome").value,
       email: byId("email").value,
       telefone: byId("telefone").value
     };
+
     try{
       await postJSON("/api/clientes", payload);
       form.reset();
-      await render();
+      setSuccess("Cliente cadastrado com sucesso.");
+      await loadClientesTable();
     }catch(err){
-      alert("Erro ao cadastrar cliente: " + err.message);
+      setError(err.message, "Erro ao cadastrar cliente");
     }
   });
-
-  try{ await render(); }catch(err){ console.error(err); }
 }
 
-// ===== EMPRÉSTIMOS =====
 async function initEmprestimos(){
   const form = byId("formEmprestimo");
-  const lista = byId("listaEmprestimos");
-  if(!form || !lista) return;
+  if(!form) return;
 
-  async function render(){
-    const emprestimos = await getJSON("/api/emprestimos");
-    lista.innerHTML = "";
-    emprestimos.forEach(e=>{
-      const li = document.createElement("li");
-      const cliente = e.cliente ? e.cliente.nome : "—";
-      const livro = e.livro ? e.livro.titulo : "—";
-      li.textContent = `#${e.id} — Cliente: ${cliente} | Livro: ${livro} | Empréstimo: ${fmtDate(e.dataEmprestimo)} | Prevista: ${fmtDate(e.dataPrevistaDevolucao)} | ${e.statusVigor}`;
-      lista.appendChild(li);
-    });
-  }
-
-  form.addEventListener("submit", async (ev)=>{
-    ev.preventDefault();
+  form.addEventListener("submit", async (e) => {
+    e.preventDefault();
     const payload = {
       clienteId: Number(byId("idCliente").value),
       livroId: Number(byId("idLivro").value),
-      dataPrevistaDevolucao: byId("prevista").value // input type=date manda YYYY-MM-DD
+      dataPrevistaDevolucao: byId("prevista").value
     };
+
     try{
       await postJSON("/api/emprestimos", payload);
       form.reset();
-      await render();
+      setSuccess("Empréstimo registrado com sucesso.");
     }catch(err){
-      alert("Erro ao registrar empréstimo: " + err.message);
+      setError(err.message, "Erro ao registrar empréstimo");
     }
   });
-
-  try{ await render(); }catch(err){ console.error(err); }
 }
 
-// ===== DEVOLUÇÕES =====
 async function initDevolucoes(){
   const form = byId("formDevolucao");
-  const lista = byId("listaDevolucoes");
-  if(!form || !lista) return;
+  if(!form) return;
 
-  async function render(){
-    const devolucoes = await getJSON("/api/devolucoes");
-    lista.innerHTML = "";
-    devolucoes.forEach(d=>{
-      const empId = d.emprestimo ? d.emprestimo.id : "—";
-      const livro = (d.emprestimo && d.emprestimo.livro) ? d.emprestimo.livro.titulo : "—";
-      const li = document.createElement("li");
-      li.textContent = `#${d.id} — Empréstimo: ${empId} | Livro: ${livro} | Devolução: ${fmtDate(d.dataDevolucao)} | Atraso: ${d.qtdeDiasAtraso} dia(s) | Multa: R$ ${fmtMoney(d.valorMulta)}`;
-      lista.appendChild(li);
-    });
-  }
-
-  form.addEventListener("submit", async (ev)=>{
-    ev.preventDefault();
+  form.addEventListener("submit", async (e) => {
+    e.preventDefault();
     const payload = {
       emprestimoId: Number(byId("idEmprestimo").value),
       dataDevolucao: byId("data").value
     };
+
     try{
       await postJSON("/api/devolucoes", payload);
       form.reset();
-      await render();
+      setSuccess("Devolução registrada com sucesso.");
+      await loadDevolucoesTable();
+      await loadEmprestimosTable();
+      await loadLivrosTable();
     }catch(err){
-      alert("Erro ao registrar devolução: " + err.message);
+      setError(err.message, "Erro ao registrar devolução");
     }
   });
-
-  try{ await render(); }catch(err){ console.error(err); }
 }
 
-document.addEventListener("DOMContentLoaded", async ()=>{
+async function initEditarLivros(){
+  const form = byId("formEditarLivro");
+  const busca = byId("buscaLivro");
+  if(!form) return;
+
+  try{
+    livrosCache = await getJSON("/api/livros");
+    renderEditableLivrosTable(livrosCache);
+  }catch(err){
+    setError(err.message, "Erro ao carregar livros para edição");
+  }
+
+  if(busca){
+    busca.addEventListener("input", filtrarLivrosEdicao);
+  }
+
+  form.addEventListener("submit", async (e) => {
+    e.preventDefault();
+    if(!livroSelecionadoId){
+      alert("Selecione um livro na tabela para editar.");
+      return;
+    }
+
+    const payload = {
+      titulo: byId("editTitulo").value,
+      autor: byId("editAutor").value,
+      genero: byId("editGenero").value,
+      anoPublicacao: byId("editAno").value,
+      descricao: byId("editDescricao").value,
+      statusDisponibilidade: byId("editStatusLivro").value
+    };
+
+    try{
+      await putJSON(`/api/livros/${livroSelecionadoId}`, payload);
+      setSuccess("Livro atualizado com sucesso.");
+      livrosCache = await getJSON("/api/livros");
+      filtrarLivrosEdicao();
+      selecionarLivro(livroSelecionadoId);
+    }catch(err){
+      setError(err.message, "Erro ao editar livro");
+    }
+  });
+}
+
+async function initEditarClientes(){
+  const form = byId("formEditarCliente");
+  const busca = byId("buscaCliente");
+  if(!form) return;
+
+  try{
+    clientesCache = await getJSON("/api/clientes");
+    renderEditableClientesTable(clientesCache);
+  }catch(err){
+    setError(err.message, "Erro ao carregar clientes para edição");
+  }
+
+  if(busca){
+    busca.addEventListener("input", filtrarClientesEdicao);
+  }
+
+  form.addEventListener("submit", async (e) => {
+    e.preventDefault();
+    if(!clienteSelecionadoId){
+      alert("Selecione um cliente na tabela para editar.");
+      return;
+    }
+
+    const payload = {
+      nome: byId("editNome").value,
+      email: byId("editEmail").value,
+      telefone: byId("editTelefone").value,
+      statusAcesso: byId("editStatusCliente").value
+    };
+
+    try{
+      await putJSON(`/api/clientes/${clienteSelecionadoId}`, payload);
+      setSuccess("Cliente atualizado com sucesso.");
+      clientesCache = await getJSON("/api/clientes");
+      filtrarClientesEdicao();
+      selecionarCliente(clienteSelecionadoId);
+    }catch(err){
+      setError(err.message, "Erro ao editar cliente");
+    }
+  });
+}
+
+document.addEventListener("DOMContentLoaded", async () => {
   await initLivros();
   await initClientes();
   await initEmprestimos();
   await initDevolucoes();
+  await initEditarLivros();
+  await initEditarClientes();
+
+  try{ await loadLivrosTable(); }catch(err){ console.error(err); }
+  try{ await loadClientesTable(); }catch(err){ console.error(err); }
+  try{ await loadEmprestimosTable(); }catch(err){ console.error(err); }
+  try{ await loadDevolucoesTable(); }catch(err){ console.error(err); }
 });
