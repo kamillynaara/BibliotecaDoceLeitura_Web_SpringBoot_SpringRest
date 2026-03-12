@@ -8,8 +8,7 @@ A aplicação foi reestruturada para arquitetura Web utilizando Spring Boot e Ap
 O sistema permite:  
 - Cadastro  
 - Listagem  
-- Atualização  
-- Exclusão  
+- Atualização   
 
 ---
 
